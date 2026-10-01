@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const dns = require('node:dns');
 const app = express();
 
 // Basic Configuration
@@ -41,9 +42,15 @@ app.post('/api/shorturl', function(req, res) {
     return res.json({ error: 'invalid url' });
   }
 
-  const shortUrl = nextId++;
-  urls.set(shortUrl, originalUrl);
-  res.json({ original_url: originalUrl, short_url: shortUrl });
+  dns.lookup(parsedUrl.hostname, function(error) {
+    if (error) {
+      return res.json({ error: 'invalid url' });
+    }
+
+    const shortUrl = nextId++;
+    urls.set(shortUrl, originalUrl);
+    res.json({ original_url: originalUrl, short_url: shortUrl });
+  });
 });
 
 // Endpoint to redirect to the original URL based on the short URL.
